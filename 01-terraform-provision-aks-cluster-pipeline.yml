@@ -38,7 +38,7 @@ stages:
       inputs:
         # This is your existing MI-based service connection
         azureSubscription: 'terraform-aks-azurerm-svc-con'
-        scriptType: pscore    # PowerShell Core on Windows agent
+        scriptType: ps    # PowerShell Core on Windows agent
         scriptLocation: inlineScript
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
         inlineScript: |

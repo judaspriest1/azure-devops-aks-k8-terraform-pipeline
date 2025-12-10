@@ -32,28 +32,23 @@ stages:
       inputs:
         terraformVersion: 'latest'
 
-    # Replace TerraformCLI@0 with AzureCLI@2 so MI works
-    - task: AzureCLI@2
-      displayName: 'Terraform Init & Validate (Managed Identity)'
+    - task: TerraformCLI@0
+      displayName: Terraform Init
       inputs:
-        # This is your existing MI-based service connection
-        azureSubscription: 'terraform-aks-azurerm-svc-con'
-        scriptType: ps    # PowerShell Core on Windows agent
-        scriptLocation: inlineScript
+        command: 'init'
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
-        inlineScript: |
-          terraform --version
+        backendType: 'azurerm'
+        backendServiceArm: 'terraform-aks-azurerm-svc-con'   # <---  SERVICE CONNECTION NAME
+        backendAzureRmResourceGroupName: 'terraform-storage-rg'
+        backendAzureRmStorageAccountName: 'terraformstateazureaks3'
+        backendAzureRmContainerName: 'tfstatefiles'
+        backendAzureRmKey: 'aks-base.tfstate'
+        allowTelemetryCollection: false
 
-          # Tell Terraform to use Managed Identity
-          $env:ARM_USE_MSI = "true"
-          $env:ARM_SUBSCRIPTION_ID = "$(az account show --query id -o tsv)"
-          $env:ARM_TENANT_ID       = "$(az account show --query tenantId -o tsv)"
+    - task: TerraformCLI@0
+      displayName: Terraform Validate
+      inputs:
+        command: 'validate'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
+        allowTelemetryCollection: false
 
-          # Backend config for AzureRM
-          terraform init `
-            -backend-config="resource_group_name=terraform-storage-rg" `
-            -backend-config="storage_account_name=terraformstateazureaks3" `
-            -backend-config="container_name=tfstatefiles" `
-            -backend-config="key=aks-base.tfstate"
-
-          terraform validate

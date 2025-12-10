@@ -71,7 +71,7 @@ stages:
                   Write-Host "Running terraform init for Dev backend..."
                   terraform init `
                     -backend-config="resource_group_name=terraform-storage-rg" `
-                    -backend-config="storage_account_name=terraformstatexlrwdrzs" `
+                    -backend-config="storage_account_name=terraformstateazureaks3" `
                     -backend-config="container_name=tfstatefiles" `
                     -backend-config="key=aks-$(DEV_ENVIRONMENT).tfstate"
 

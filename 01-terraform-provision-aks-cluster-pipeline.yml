@@ -32,23 +32,29 @@ stages:
       inputs:
         terraformVersion: 'latest'
 
-    - task: TerraformCLI@0
-      displayName: Terraform Init
+    - task: PowerShell@2
+      displayName: 'Terraform Init & Validate (Service Principal)'
       inputs:
-        command: 'init'
+        targetType: inline
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
-        backendType: 'azurerm'
-        backendServiceArm: 'terraform-aks-azurerm-svc-con'   # <---  SERVICE CONNECTION NAME
-        backendAzureRmResourceGroupName: 'terraform-storage-rg'
-        backendAzureRmStorageAccountName: 'terraformstateazureaks3'
-        backendAzureRmContainerName: 'tfstatefiles'
-        backendAzureRmKey: 'aks-base.tfstate'
-        allowTelemetryCollection: false
+        script: |
+          Write-Host "Using Terraform from PATH:"
+          terraform --version
 
-    - task: TerraformCLI@0
-      displayName: Terraform Validate
-      inputs:
-        command: 'validate'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform-manifests'
-        allowTelemetryCollection: false
+          # Configure Terraform to use Service Principal auth
+          $env:ARM_CLIENT_ID       = "$(ARM_CLIENT_ID)"
+          $env:ARM_CLIENT_SECRET   = "$(ARM_CLIENT_SECRET)"
+          $env:ARM_TENANT_ID       = "$(ARM_TENANT_ID)"
+          $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+
+          Write-Host "Running terraform init against AzureRM backend..."
+          terraform init `
+            -backend-config="resource_group_name=terraform-storage-rg" `
+            -backend-config="storage_account_name=terraformstateazureaks3" `
+            -backend-config="container_name=tfstatefiles" `
+            -backend-config="key=aks-base.tfstate"
+
+          Write-Host "Running terraform validate..."
+          terraform validate
+
 

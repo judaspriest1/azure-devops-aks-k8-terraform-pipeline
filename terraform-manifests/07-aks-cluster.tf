@@ -37,6 +37,10 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
 # Identity (System Assigned or Service Principal)
   identity { type = "SystemAssigned" }
 
+  oidc_issuer_enabled       = true
+  # Optional but usually goes together with OIDC:
+  workload_identity_enabled = true
+
 # Added June 2023
 oms_agent {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.insights.id

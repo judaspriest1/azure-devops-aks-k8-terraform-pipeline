@@ -1,0 +1,2 @@
+PS C:\AKS\azure-aks-kubernetes-masterclass\azure-devops-aks-k8-terraform-pipeline> ssh-keygen -t rsa -b 4096 -m PEM -C "azureuser@pipeline" -f "C:\AKS\azure-aks-kubernetes-masterclass\azure-devops-aks-k8-terraform-pipeline\id_rsa"
+Generating public/private rsa key pair.

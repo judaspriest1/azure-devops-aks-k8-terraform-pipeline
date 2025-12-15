@@ -207,7 +207,7 @@ stages:
                   -backend-config="resource_group_name=terraform-storage-rg" `
                   -backend-config="storage_account_name=terraformstateazureaks3" `
                   -backend-config="container_name=tfstatefiles" `
-                  -backend-config="key=aks-$(DEV_ENVIRONMENT).tfstate"
+                  -backend-config="key=aks-$(QA_ENVIRONMENT).tfstate"
 
           - task: PowerShell@2
             displayName: 'Terraform Plan (QA)'

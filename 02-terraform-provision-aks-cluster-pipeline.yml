@@ -71,13 +71,20 @@ stages:
             -backend-config="key=aks-base.tfstate"
 
           terraform validate
+
 ###############################################################
 # Stage-2: Deploy Dev AKS Cluster
 ###############################################################
+
 - stage: DeployAKSClusters
   displayName: Deploy AKS Clusters
   dependsOn: TerraformValidate
   jobs:
+
+  # -------------------------
+  # Deploy DEV
+  # -------------------------
+
   - deployment: DeployDevAKSCluster
     displayName: "Deploy Dev AKS Cluster"
     environment: $(DEV_ENVIRONMENT)
@@ -154,4 +161,81 @@ stages:
                 $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
 
                 $planPath = "$(Pipeline.Workspace)/terraform-manifests-out/$(DEV_ENVIRONMENT)-$(Build.BuildId).out"
+                terraform apply "$planPath"
+
+  # -------------------------
+  # Deploy QA
+  # -------------------------
+  - deployment: DeployQaAKSCluster
+    displayName: "Deploy QA AKS Cluster"
+    environment: $(QA_ENVIRONMENT)
+    pool:
+      name: 'Default'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            displayName: Download Published Terraform Files
+            artifact: terraform-manifests-out
+
+          - task: DownloadSecureFile@1
+            displayName: Download SSH Key
+            name: sshkey
+            inputs:
+              secureFile: 'id_rsa.pub'   # <-- same secure file
+
+          - task: TerraformInstaller@0
+            displayName: Install Terraform
+            inputs:
+              terraformVersion: 'latest'
+
+          - task: PowerShell@2
+            displayName: 'Terraform Init (QA)'
+            inputs:
+              targetType: inline
+              workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+              script: |
+                terraform --version
+
+                $env:ARM_CLIENT_ID       = "$(ARM_CLIENT_ID)"
+                $env:ARM_CLIENT_SECRET   = "$(ARM_CLIENT_SECRET)"
+                $env:ARM_TENANT_ID       = "$(ARM_TENANT_ID)"
+                $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+
+                terraform init `
+                  -backend-config="resource_group_name=terraform-storage-rg" `
+                  -backend-config="storage_account_name=terraformstateazureaks3" `
+                  -backend-config="container_name=tfstatefiles" `
+                  -backend-config="key=aks-$(DEV_ENVIRONMENT).tfstate"
+
+          - task: PowerShell@2
+            displayName: 'Terraform Plan (QA)'
+            inputs:
+              targetType: inline
+              workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+              script: |
+                $env:ARM_CLIENT_ID       = "$(ARM_CLIENT_ID)"
+                $env:ARM_CLIENT_SECRET   = "$(ARM_CLIENT_SECRET)"
+                $env:ARM_TENANT_ID       = "$(ARM_TENANT_ID)"
+                $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+
+                $planPath = "$(Pipeline.Workspace)/terraform-manifests-out/$(QA_ENVIRONMENT)-$(Build.BuildId).out"
+                terraform plan `
+                  -var "ssh_public_key=$(sshkey.secureFilePath)" `
+                  -var "environment=$(QA_ENVIRONMENT)" `
+                  -out "$planPath"
+
+          - task: PowerShell@2
+            displayName: 'Terraform Apply (QA)'
+            inputs:
+              targetType: inline
+              workingDirectory: '$(Pipeline.Workspace)/terraform-manifests-out'
+              script: |
+                $env:ARM_CLIENT_ID       = "$(ARM_CLIENT_ID)"
+                $env:ARM_CLIENT_SECRET   = "$(ARM_CLIENT_SECRET)"
+                $env:ARM_TENANT_ID       = "$(ARM_TENANT_ID)"
+                $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
+
+                $planPath = "$(Pipeline.Workspace)/terraform-manifests-out/$(QA_ENVIRONMENT)-$(Build.BuildId).out"
                 terraform apply "$planPath"

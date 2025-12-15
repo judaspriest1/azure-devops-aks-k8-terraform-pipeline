@@ -11,7 +11,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "linux101" {
   min_count             = 1
   mode                  = "User"
   name                  = "linux101"
-  temporary_name_for_rotation = "win101tmp"
+  temporary_name_for_rotation = "linux101tmp"
   orchestrator_version  = data.azurerm_kubernetes_service_versions.current.latest_version
   os_disk_size_gb       = 64
   os_type               = "Linux" # Default is Linux, we can change to Windows

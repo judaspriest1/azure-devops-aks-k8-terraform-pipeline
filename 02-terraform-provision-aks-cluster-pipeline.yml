@@ -124,7 +124,7 @@ stages:
                 $env:ARM_TENANT_ID       = "$(ARM_TENANT_ID)"
                 $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
 
-                terraform init `
+                terraform init -reconfigure `
                   -backend-config="resource_group_name=terraform-storage-rg" `
                   -backend-config="storage_account_name=terraformstateazureaks3" `
                   -backend-config="container_name=tfstatefiles" `
@@ -203,7 +203,7 @@ stages:
                 $env:ARM_TENANT_ID       = "$(ARM_TENANT_ID)"
                 $env:ARM_SUBSCRIPTION_ID = "$(ARM_SUBSCRIPTION_ID)"
 
-                terraform init `
+                terraform init -reconfigure `
                   -backend-config="resource_group_name=terraform-storage-rg" `
                   -backend-config="storage_account_name=terraformstateazureaks3" `
                   -backend-config="container_name=tfstatefiles" `
